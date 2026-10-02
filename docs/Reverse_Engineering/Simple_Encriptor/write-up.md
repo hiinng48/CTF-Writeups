@@ -1,6 +1,8 @@
+Link to the challenge: [Simple Encryptor](https://app.hackthebox.com/challenges/Simple%2520Encryptor?tab=play_challenge)
+
 ![full](imgs/full.png)
 
-first, i put the "encrypt" file inside Ghidra. after that, Ghidra decompiles the binary file back into a c/c++ language code.
+first, i put the `encrypt` file inside Ghidra. after that, Ghidra decompiles the binary file back into a c/c++ language code.
 
 after that lets focus on explaining lines of code 
 
@@ -18,6 +20,8 @@ fclose(local_30);
 
 this part can be understood as opening a file stream, allocating memory for the file content, reading the content into memory, and then closing the file stream.
 
+---
+
 ![2](imgs/2.png)
 
 ```c
@@ -28,8 +32,11 @@ srand(local_40);
 
 `time((time_t *)0x0)` means `time(NULL)` which returns the current time in seconds since the epoch `January 1, 1970`. 
 
-This value is then used to seed the random number generator with srand(local_40).
-How `srand()`, `rand()`, and `time()` work will be explained in `Fundamentals/re_101.md`
+This value is then used to seed the random number generator with srand `local_40`.
+
+How `srand()`, `rand()`, and `time()` work will be explained in [Fundamentals/re_101.md](../Fundamentals/re_101.md#how-srand-rand-and-time-work).
+
+---
 
 ![3](imgs/3.png)
 
@@ -58,12 +65,19 @@ I can rewrite the code in a more readable way:
   }
 ```
 
-So basically the encryption algorithm goes like this:
+**So basically the encryption algorithm goes like this:**
+
 1. XOR each byte with random_value.
+
 2. Bitwise rotate the result by shift_amount.
-We can reverse the encryption process like this:
+
+**We can reverse the encryption process like this:**
+
 1. Bitwise rotate the encrypted byte by (8 - shift_amount).
+
 2. XOR the result with the same random_value.
+
+---
 
 ![4](imgs/4.png)
 
@@ -98,11 +112,13 @@ So the seed is `1655780698`. I can check if this is correct by reading `flag.enc
 
 ![6](imgs/6.png)
 
-I can see that the first 4 bytes of the `flag.enc` file is `5A 35 B1 62`.
+we can see that the first 4 bytes of the `flag.enc` file is `5A 35 B1 62`.
 
 however, the value is stored in Little-Endian format, so we need to reverse the byte order to get the correct seed value.
 
 -> The correct seed value is `62 B1 35 5A` in hex, which is `0x62B1355A = 1655780698` in decimal.
+
+---
 
 After we have the seed value, we can use it to seed the random number generator again and then decrypt the file by reversing the encryption process.
 
@@ -148,9 +164,9 @@ This part i bumped into a problem. Because `encrypt` is a Linux ELF binary, it u
 
 ![encrypt_info](imgs/encrypt_info.png)
 
-I ran `decrypt.c` on Windows, but the `rand()` implementation on Windows, it uses `ucrtbase.dll` implementation, which is different from the one in `glibc`. So the decrypted content is not correct.
+I ran `decrypt.c` on Windows, but the `rand()` implementation on Windows uses `ucrtbase.dll` implementation, which is different from the one in `glibc`. So the decrypted content is not correct.
 
-I ran `decrypt.c` in WSL. We found the flag.
+because of that I ran `decrypt.c` in WSL. We found the flag.
 
 ![flag](imgs/flag.png)
 
